@@ -23,7 +23,7 @@ export class Circle {
         this._mouse = new THREE.Vector3(0, 0, 0);
         this._center = new THREE.Vector3(0, 0, 0);
         this._isLine = false;
-
+        this._length;
         /**카메라 light, 3차원 모델을 설정하는 _setupModel을 설정  */
         this._setupCamera();
         this._setupLight();
@@ -89,6 +89,7 @@ export class Circle {
             });
 
             this._dir = this._mouse.clone().sub(this._center).normalize();
+            this._length = this._center.distanceTo(this._mouse);
 
             this._velocity.add(this._dir);
             console.log(this._line);
@@ -158,13 +159,13 @@ export class Circle {
             this._cube.rotation.y = time;
 
             this._location.add(this._velocity);
-            this._location.multiplyScalar(0.1);
+            this._location.multiplyScalar(this._length * 0.05);
 
             this._cube.position.add(this._location);
 
             // 화면 경계에 부딪혔을 때
-            const boundaryX = this._divContainer.clientWidth / 300;
-            const boundaryY = this._divContainer.clientHeight / 300;
+            const boundaryX = this._divContainer.clientWidth / 250;
+            const boundaryY = this._divContainer.clientHeight / 250;
 
             if (
                 this._cube.position.x + 0.5 > boundaryX ||
@@ -177,7 +178,7 @@ export class Circle {
                 this._cube.position.y + 0.5 > boundaryY ||
                 this._cube.position.y - 0.5 < -boundaryY
             ) {
-                console.log('여기1', this._velocity.y);
+                console.log('여기');
                 this._velocity.y = this._velocity.y * -1; // y 이동 방향 반전
             }
         }
