@@ -16,15 +16,12 @@ export class Circle {
         const scene = new THREE.Scene();
         /**필드화 시킴 */
         this._scene = scene;
-        this._location = new THREE.Vector2(0, 0);
-        this._velocity = new THREE.Vector2(0, 0);
-        this._dir = new THREE.Vector2(0, 0);
+        this._location = new THREE.Vector3(0, 0, 0);
+        this._velocity = new THREE.Vector3(0, 0, 0);
+        this._dir = new THREE.Vector3(0, 0, 0);
 
-        this._mouse = new THREE.Vector2();
-        this._center = new THREE.Vector2(
-            divContainer.clientWidth,
-            divContainer.clientHeight
-        );
+        this._mouse = new THREE.Vector3(0, 0, 0);
+        this._center = new THREE.Vector3(0, 0, 0);
         this._isLine = false;
 
         /**카메라 light, 3차원 모델을 설정하는 _setupModel을 설정  */
@@ -59,21 +56,23 @@ export class Circle {
         let points = [];
         this._divContainer.addEventListener('mousedown', (event) => {
             this._isCube = false;
-            this._location = new THREE.Vector2(0, 0);
-            this._velocity = new THREE.Vector2(0, 0);
-            this._dir = new THREE.Vector2(0, 0);
+            this._location = new THREE.Vector3(0, 0, 0);
+            this._velocity = new THREE.Vector3(0, 0, 0);
+            this._dir = new THREE.Vector3(0, 0, 0);
             this._cube.removeFromParent();
-            this._mouse = new THREE.Vector2(
+            this._center = new THREE.Vector3(
                 ((event.clientX / this._divContainer.clientWidth) * 2 - 1) *
                     6.5,
-                -((event.clientY / this._divContainer.clientHeight) * 2 - 1) * 3
+                -((event.clientY / this._divContainer.clientHeight) * 2 - 1) *
+                    3,
+                0
             );
 
-            this._cube.position.set(this._mouse.x, this._mouse.y, 0);
+            this._cube.position.set(this._center.x, this._center.y, 0);
 
             this._scene.add(this._cube);
 
-            points.push(new THREE.Vector2(this._mouse.x, this._mouse.y));
+            points.push(new THREE.Vector3(this._center.x, this._center.y, 0));
             const geometry = new THREE.BufferGeometry().setFromPoints(points);
             this._line = new THREE.Line(geometry, material);
             this._scene.add(this._line);
@@ -89,23 +88,27 @@ export class Circle {
                 }
             });
 
-            this._velocity.add(this._mouse.clone());
+            this._dir = this._mouse.clone().sub(this._center).normalize();
 
+            this._velocity.add(this._dir);
+            console.log(this._line);
             points = [];
             this._isLine = false;
         });
 
         this._divContainer.addEventListener('mousemove', (event) => {
             if (this._isLine) {
-                this._mouse = new THREE.Vector2(
+                this._mouse = new THREE.Vector3(
                     ((event.clientX / this._divContainer.clientWidth) * 2 - 1) *
                         6.5,
                     -(
                         (event.clientY / this._divContainer.clientHeight) * 2 -
                         1
-                    ) * 3
+                    ) * 3,
+                    0
                 );
-                points.push(new THREE.Vector2(this._mouse.x, this._mouse.y));
+
+                points = [this._center, this._mouse];
 
                 const geometry = new THREE.BufferGeometry().setFromPoints(
                     points
@@ -154,28 +157,29 @@ export class Circle {
             this._cube.rotation.x = time;
             this._cube.rotation.y = time;
 
-            this._location = new THREE.Vector3(
-                this._velocity.x,
-                this._velocity.y,
-                0
-            );
+            this._location.add(this._velocity);
+            this._location.multiplyScalar(0.1);
+
+            this._cube.position.add(this._location);
 
             // 화면 경계에 부딪혔을 때
             const boundaryX = this._divContainer.clientWidth / 300;
             const boundaryY = this._divContainer.clientHeight / 300;
+
             if (
-                this._location.x + 0.5 > boundaryX ||
-                this._location.x - 0.5 < -boundaryX
+                this._cube.position.x + 0.5 > boundaryX ||
+                this._cube.position.x - 0.5 < -boundaryX
             ) {
+                console.log('여기');
                 this._velocity.x = this._velocity.x * -1; // x 이동 방향 반전
             }
             if (
-                this._location.y + 0.5 > boundaryY ||
-                this._location.y - 0.5 < -boundaryY
+                this._cube.position.y + 0.5 > boundaryY ||
+                this._cube.position.y - 0.5 < -boundaryY
             ) {
+                console.log('여기1', this._velocity.y);
                 this._velocity.y = this._velocity.y * -1; // y 이동 방향 반전
             }
-            this._cube.position.lerp(this._location, 0.01);
         }
     }
 }
