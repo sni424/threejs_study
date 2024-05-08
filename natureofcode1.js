@@ -9,22 +9,31 @@ export class Circle {
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         /**랜더러 객체 setPixelRatio값 정의 */
         renderer.setPixelRatio(window.devicePixelRatio);
+        /**divContainer에 canvas생성 */
         divContainer.appendChild(renderer.domElement);
         this._renderer = renderer;
+        /**마우스를 땠을때 큐브가 움직이게 하는 변수 */
         this._isCube = false;
         /**scene객체 생성 */
         const scene = new THREE.Scene();
         /**필드화 시킴 */
         this._scene = scene;
+        /**큐브 위치 */
         this._location = new THREE.Vector3(0, 0, 0);
+        /**location에 더할 변수 가속도 */
         this._velocity = new THREE.Vector3(0, 0, 0);
+        /**특정 위치에서 다른 위치로 향하게 하는 변수 */
         this._dir = new THREE.Vector3(0, 0, 0);
 
+        /**마우스 위치 */
         this._mouse = new THREE.Vector3(0, 0, 0);
+        /**큐브 생성 위치 */
         this._center = new THREE.Vector3(0, 0, 0);
+        /**마우스를 움직일때마다 라인이 생성되는게 아니라 클릭 이후에 움직이면 생성되게 */
         this._isLine = false;
+        /**라인 길이 */
         this._length;
-        /**카메라 light, 3차원 모델을 설정하는 _setupModel을 설정  */
+
         this._setupCamera();
         this._setupLight();
         this._setupModel();
@@ -37,6 +46,7 @@ export class Circle {
         /**render메서드는 3차원 그래픽장면을 만들어주는 메서드 */
         requestAnimationFrame(this.render.bind(this));
     }
+    /** 카메라 설정 */
     _setupCamera() {
         const width = this._divContainer.clientWidth;
         const height = this._divContainer.clientHeight;
@@ -54,6 +64,7 @@ export class Circle {
             color: 0x0000ff,
         });
         let points = [];
+        /**마우스를 눌렀을때 설정 이전값들 초기화 및 큐브를 마우스 찍은곳에 생성 */
         this._divContainer.addEventListener('mousedown', (event) => {
             this._isCube = false;
             this._location = new THREE.Vector3(0, 0, 0);
@@ -79,6 +90,7 @@ export class Circle {
             this._isLine = true;
         });
 
+        /**마우스를 땠을때 라인을 지우고 큐브가 라인 방향으로 이동하게 설정 */
         this._divContainer.addEventListener('mouseup', (event) => {
             this._isCube = true;
 
@@ -92,11 +104,11 @@ export class Circle {
             this._length = this._center.distanceTo(this._mouse);
 
             this._velocity.add(this._dir);
-            console.log(this._line);
             points = [];
             this._isLine = false;
         });
 
+        /**마우스를 움직일때마다 라인을 변경 */
         this._divContainer.addEventListener('mousemove', (event) => {
             if (this._isLine) {
                 this._mouse = new THREE.Vector3(
@@ -128,6 +140,7 @@ export class Circle {
         this._scene.add(directionLight);
     }
     _setupModel() {
+        //큐브 생성
         const geometry = new THREE.BoxGeometry(1, 1, 1);
         const material = new THREE.MeshPhongMaterial({ color: 0x44a88 });
         const cube = new THREE.Mesh(geometry, material);
@@ -146,10 +159,11 @@ export class Circle {
         this._renderer.setSize(width, height);
     }
     render(time) {
-        /**render가 _scene을 _camera시점을 이용해서 렌더링해라   */
+        /**render가 _scene을 _camera시점을 이용해서 렌더링   */
         this._renderer.render(this._scene, this._camera);
         this.update(time);
-        /** 브라우저에게 수행하기를 원하는 애니메이션을 알리고 다음 리페인트가 진행되기 전에 해당 애니메이션을 업데이트하는 함수를 호출하게 합니다. 이 메소드는 리페인트 이전에 실행할 콜백을 인자로 받습니다. */
+        /** 애니메이션 업데이트 */
+        /**this.render.bind(this) this.render 함수가 현재 객체의 메서드로 실행되게 */
         requestAnimationFrame(this.render.bind(this));
     }
     update(time) {
@@ -158,9 +172,12 @@ export class Circle {
             this._cube.rotation.x = time;
             this._cube.rotation.y = time;
 
+            /**큐브가 이동할 위치 */
             this._location.add(this._velocity);
+            /**선 길에따른 속도 */
             this._location.multiplyScalar(this._length * 0.05);
 
+            /**큐브가 this._location방향으로 이동 set을사용하면 순간이동하니 add로 하나씩 더해서  */
             this._cube.position.add(this._location);
 
             // 화면 경계에 부딪혔을 때
@@ -171,15 +188,29 @@ export class Circle {
                 this._cube.position.x + 0.5 > boundaryX ||
                 this._cube.position.x - 0.5 < -boundaryX
             ) {
-                console.log('여기');
-                this._velocity.x = this._velocity.x * -1; // x 이동 방향 반전
+                // 큐브가 화면 경계 내에서만 이동하도록 제한 해당코드 없으면 큐브가 어느순간 멈춤
+                this._cube.position.x = Math.min(
+                    boundaryX - 0.5,
+                    Math.max(-boundaryX + 0.5, this._cube.position.x)
+                );
+
+                // x 이동 방향 반전
+                this._velocity.x *= -1;
             }
             if (
                 this._cube.position.y + 0.5 > boundaryY ||
                 this._cube.position.y - 0.5 < -boundaryY
             ) {
-                console.log('여기');
-                this._velocity.y = this._velocity.y * -1; // y 이동 방향 반전
+                // 큐브가 화면 경계 내에서만 이동하도록 제한  해당코드 없으면 큐브가 멈춤
+                /**이 값이 boundaryY - 0.5보다 크면 boundaryY - 0.5가 반환 */
+                this._cube.position.y = Math.min(
+                    boundaryY - 0.5,
+                    /**this._cube.position.y가 -boundaryY + 0.5보다 작으면 -boundaryY + 0.5가 반환 */
+                    Math.max(-boundaryY + 0.5, this._cube.position.y)
+                );
+
+                // y 이동 방향 반전
+                this._velocity.y *= -1;
             }
         }
     }
