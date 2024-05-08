@@ -185,28 +185,33 @@ export class Circle {
             const boundaryY = this._divContainer.clientHeight / 250;
 
             if (
-                this._cube.position.x + 0.5 > boundaryX ||
-                this._cube.position.x - 0.5 < -boundaryX
+                this._cube.position.x > boundaryX ||
+                this._cube.position.x < -boundaryX
             ) {
                 // 큐브가 화면 경계 내에서만 이동하도록 제한 해당코드 없으면 큐브가 어느순간 멈춤
                 this._cube.position.x = Math.min(
-                    boundaryX - 0.5,
-                    Math.max(-boundaryX + 0.5, this._cube.position.x)
+                    boundaryX,
+                    Math.max(-boundaryX, this._cube.position.x)
                 );
 
                 // x 이동 방향 반전
                 this._velocity.x *= -1;
             }
             if (
-                this._cube.position.y + 0.5 > boundaryY ||
-                this._cube.position.y - 0.5 < -boundaryY
+                this._cube.position.y > boundaryY ||
+                this._cube.position.y < -boundaryY
             ) {
                 // 큐브가 화면 경계 내에서만 이동하도록 제한  해당코드 없으면 큐브가 멈춤
-                /**이 값이 boundaryY - 0.5보다 크면 boundaryY - 0.5가 반환 */
+                /**이 부분은 큐브의 y 위치가 위 경계보다 커지지 않도록 보정하는 역할
+                 *  this._cube.position.y가 boundaryY보다 크면, boundaryY 가 반환되어
+                 *  큐브의 y 위치가 boundaryY보다 커지지 않도록 보장*/
                 this._cube.position.y = Math.min(
-                    boundaryY - 0.5,
-                    /**this._cube.position.y가 -boundaryY + 0.5보다 작으면 -boundaryY + 0.5가 반환 */
-                    Math.max(-boundaryY + 0.5, this._cube.position.y)
+                    boundaryY,
+                    /**y 위치가 아래 경계보다 작아지지 않도록 보정하는 역할 */
+                    /**this._cube.position.y가 -boundaryY보다 작으면,
+                     * -boundaryY가 반환되어
+                     * 큐브의 y 위치가 -boundaryY보다 작아지지 않도록 보장 */
+                    Math.max(-boundaryY, this._cube.position.y)
                 );
 
                 // y 이동 방향 반전
