@@ -34,7 +34,7 @@ export class Circle {
         /**라인 길이 */
         this._length;
         /**큐브의 질량 */
-        this._mass = 10;
+        this._mass = 100;
         /**가속도 */
         this._speed;
         /**중력 */
@@ -52,6 +52,10 @@ export class Circle {
 
         /**render메서드는 3차원 그래픽장면을 만들어주는 메서드 */
         requestAnimationFrame(this.render.bind(this));
+        const massInput = document.querySelector('#mass');
+        massInput.addEventListener('input', (event) => {
+            this._mass = Number(event.target.value);
+        });
     }
     /** 카메라 설정 */
     _setupCamera() {
@@ -120,7 +124,7 @@ export class Circle {
 
             /**가속도 */
             this._speed = this._length / this._mass;
-            console.log(this._length);
+
             points = [];
             this._isLine = false;
         });
@@ -200,7 +204,7 @@ export class Circle {
 
             /**큐브가 this._location방향으로 이동 set을사용하면 순간이동하니 add로 하나씩 더해서  */
             this._cube.position.add(this._location);
-            console.log(this._friction);
+
             // 화면 경계에 부딪혔을 때
             const boundaryX = this._divContainer.clientWidth / 400;
             const boundaryY = this._divContainer.clientHeight / 400;

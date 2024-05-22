@@ -100,7 +100,7 @@ export class Circle {
                 }
             });
 
-            this._dir = this._mouse.clone().sub(this._center).normalize();
+            this._dir = this._mouse.clone().add(this._center).normalize();
             this._length = this._center.distanceTo(this._mouse);
 
             this._velocity.add(this._dir);
